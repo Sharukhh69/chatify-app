@@ -38,10 +38,30 @@ export const signup = async (req, res) => {
     }
 };
 
-export const login = (req, res) => {
-  res.send('login World!');
+export const login = async (req, res) => {
+    const {email, password} = req.body;
+
+    try {
+        if(!email || !password){
+            return res.status(400).json({message: 'All fields are required'});
+        }
+        const user = await User.findOne({email});
+        if(!user){
+            return res.status(400).json({message: 'Invalid credentials'});
+        }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if(!isMatch){
+            return res.status(400).json({message: 'Invalid credentials'});
+        }
+        generateToken(user._id, res);
+        res.status(200).json({message: 'Logged in successfully'});
+    }   catch(error) {
+        console.error(error);
+        res.status(500).json({message: 'Internal Server error'});
+    }
 };
 
-export const logout = (req, res) => {
-  res.send('logout World!');
+export const logout = async (req, res) => {
+    res.cookie('jwt','',{maxAge: 0});
+    res.status(200).json({message: 'Logged out successfully'});
 };
