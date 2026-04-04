@@ -1,11 +1,12 @@
 import User from "../models/User.js";
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../lib/utils.js';
+import { CLIENT_URL } from '../lib/env.js';
 
 export const signup = async (req, res) => {
     const {fullName, email, password} = req.body;
 
-    try{
+    try {
         if(!fullName || !email || !password){
             return res.status(400).json({message: 'All fields are required'});
         }
@@ -22,20 +23,16 @@ export const signup = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({
-            fullName,
-            email,
-            password: hashedPassword
-        });
+        const newUser = new User({ fullName, email, password: hashedPassword });
+
         if(newUser){
             const savedUser = await newUser.save();
             generateToken(savedUser._id, res);
-             res.status(201).json({message: 'User created successfully'});
-        }
-        else{
+            res.status(201).json({message: 'User created successfully'});
+        } else {
             res.status(400).json({message: 'Failed to create user'});
         }
-    }catch(error){
+    } catch(error) {
         console.error(error);
         res.status(500).json({message: 'Internal Server error'});
     }
@@ -47,4 +44,4 @@ export const login = (req, res) => {
 
 export const logout = (req, res) => {
   res.send('logout World!');
-};  
+};
